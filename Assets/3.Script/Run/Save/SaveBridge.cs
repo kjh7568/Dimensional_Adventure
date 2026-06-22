@@ -14,6 +14,9 @@ public static class SaveBridge
     /// <summary>오프닝 컷씬을 한 번이라도 봤는가.</summary>
     public static bool HasSeenIntro => SaveSystem.Current.hasSeenIntro;
 
+    /// <summary>원정을 한 번이라도 클리어했는가.</summary>
+    public static bool HasClearedRun => SaveSystem.Current.hasClearedRun;
+
     /// <summary>저장된 설정(읽기용). 변경 후 디스크 반영은 <see cref="SaveSettings"/>.</summary>
     public static SettingsState Settings => SaveSystem.Current.settings;
 
@@ -72,8 +75,17 @@ public static class SaveBridge
         SaveSystem.Flush();
     }
 
+    /// <summary>원정을 처음 클리어했다고 기록(엔딩 컷씬은 첫 클리어에만). 이미 기록돼 있으면 디스크 쓰기 없음.</summary>
+    public static void MarkRunCleared()
+    {
+        var data = SaveSystem.Current;
+        if (data.hasClearedRun) return;
+        data.hasClearedRun = true;
+        SaveSystem.Flush();
+    }
+
     /// <summary>진행 중인 런을 메모리(RunState)와 세이브(run/battle 슬롯) 양쪽에서 비운다. 설정·도감·플래그는 보존.
-    /// 새 게임 시작, 패배 등 "런이 끝나는" 모든 경로가 이 한 메서드를 쓴다.</summary>
+    /// 새 게임 시작, 원정 종료, 패배 등 "런이 끝나는" 모든 경로가 이 한 메서드를 쓴다.</summary>
     public static void ClearRun()
     {
         SaveSystem.ClearRun();
