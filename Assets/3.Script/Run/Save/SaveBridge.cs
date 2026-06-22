@@ -11,6 +11,9 @@ public static class SaveBridge
     /// <summary>이어하기 가능한 런이 저장돼 있는가. 설정만 있는 상태는 해당 안 됨.</summary>
     public static bool HasResumableRun() => SaveSystem.HasResumableRun();
 
+    /// <summary>오프닝 컷씬을 한 번이라도 봤는가.</summary>
+    public static bool HasSeenIntro => SaveSystem.Current.hasSeenIntro;
+
     /// <summary>저장된 설정(읽기용). 변경 후 디스크 반영은 <see cref="SaveSettings"/>.</summary>
     public static SettingsState Settings => SaveSystem.Current.settings;
 
@@ -57,6 +60,15 @@ public static class SaveBridge
             data.settings.bgmVolume = AudioManager.Instance.BgmVolume;
             data.settings.sfxVolume = AudioManager.Instance.SfxVolume;
         }
+        SaveSystem.Flush();
+    }
+
+    /// <summary>오프닝 컷씬을 봤다고 기록. 이미 기록돼 있으면 디스크 쓰기 없음.</summary>
+    public static void MarkIntroSeen()
+    {
+        var data = SaveSystem.Current;
+        if (data.hasSeenIntro) return;
+        data.hasSeenIntro = true;
         SaveSystem.Flush();
     }
 
