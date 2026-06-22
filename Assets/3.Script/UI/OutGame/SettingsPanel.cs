@@ -107,6 +107,6 @@ public class SettingsPanel : MonoBehaviour
         SaveBridge.SaveCurrentProgress();
 
         if (root != null) root.SetActive(false);
-        SceneManager.LoadScene(SceneNames.Title);
+        SceneLoader.LoadAsync(SceneNames.Title);
     }
 }

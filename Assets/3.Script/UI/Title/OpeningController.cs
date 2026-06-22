@@ -148,7 +148,7 @@ public class OpeningController : MonoBehaviour
         finishing = true;
 
         SaveBridge.MarkIntroSeen();
-        SceneManager.LoadScene(SceneNames.Map);
+        SceneLoader.LoadAsync(SceneNames.Map);
     }
 
     private System.Collections.IEnumerator Fade(float from, float to)

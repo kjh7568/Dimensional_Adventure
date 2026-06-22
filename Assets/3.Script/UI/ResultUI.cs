@@ -78,19 +78,19 @@ public class ResultUI : MonoBehaviour
         // 패배 — 런은 HandleGameEnded 에서 이미 비웠으므로(CurrentMap 도 null) 지도 분기보다 먼저 처리.
         if (!playerWon)
         {
-            SceneManager.LoadScene(SceneNames.Title);
+            SceneLoader.LoadAsync(SceneNames.Title);
             return;
         }
 
         if (map == null)
         {
             // 지도 없이 BattleScene 단독 실행 — MapScene 으로 가서 Run 진입 흐름을 다시 탄다.
-            SceneManager.LoadScene(SceneNames.Map);
+            SceneLoader.LoadAsync(SceneNames.Map);
             return;
         }
 
         RunState.AdvanceNode(map.nodes.Count, NodeType.Battle);
         SaveBridge.SaveRunProgress();
-        SceneManager.LoadScene(SceneNames.Map);
+        SceneLoader.LoadAsync(SceneNames.Map);
     }
 }

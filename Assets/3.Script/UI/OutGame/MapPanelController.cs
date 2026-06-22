@@ -205,7 +205,7 @@ public class MapPanelController : MonoBehaviour
         {
             case NodeType.Battle:
                 SaveBridge.SaveRunProgress();
-                SceneManager.LoadScene(SceneNames.Battle);
+                SceneLoader.LoadAsync(SceneNames.Battle);
                 break;
             case NodeType.Upgrade:
                 var picked = PickRandomUpgradeEvent();
