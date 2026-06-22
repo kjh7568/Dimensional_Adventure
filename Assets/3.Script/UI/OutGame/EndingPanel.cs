@@ -33,7 +33,7 @@ public class EndingPanel : MonoBehaviour
 
     private void StartNewRun()
     {
-        RunState.ResetRun();
+        SaveBridge.ClearRun();
         SceneManager.LoadScene(SceneNames.Map);
     }
 }

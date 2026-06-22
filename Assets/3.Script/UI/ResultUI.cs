@@ -4,8 +4,9 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 /// <summary>
-/// BattleController.OnGameEnded 를 구독해 결과 패널을 띄우고, 승리 시 RunState 진행 + MapScene 로드,
-/// 패배 시 같은 노드를 재도전(BattleScene 재로드)한다. RunState.CurrentMap 이 비어 있으면(단독 실행) MapScene 으로 가서 Run 을 시작.
+/// BattleController.OnGameEnded 를 구독해 결과 패널을 띄우고, 승리 시 RunState 진행 + 저장 + MapScene 로드,
+/// 패배 시 런을 종료하고 TitleScene 으로 간다. 전투 종료에 따른 세이브 처리는 이 컴포넌트가 전담한다.
+/// RunState.CurrentMap 이 비어 있으면(단독 실행) MapScene 으로 가서 Run 을 시작.
 /// </summary>
 public class ResultUI : MonoBehaviour
 {
@@ -56,6 +57,11 @@ public class ResultUI : MonoBehaviour
 
         playerWon = winner != null && winner.isPlayer;
         Debug.Log($"[ResultUI] HandleGameEnded — playerWon={playerWon}");
+
+        // 패배는 확인 버튼을 기다리지 않고 즉시 런을 끝낸다. 결과창에서 앱을 꺼도 진 전투로 이어하기되지 않게 하기 위함.
+        // 승리 저장은 노드를 전진시킨 뒤여야 하므로 OnConfirm 에서 한다.
+        if (!playerWon) SaveBridge.ClearRun();
+
         if (resultText != null)
         {
             resultText.text = playerWon ? victoryLabel : defeatLabel;
@@ -69,6 +75,13 @@ public class ResultUI : MonoBehaviour
         var map = RunState.CurrentMap;
         Debug.Log($"[ResultUI] OnConfirm — playerWon={playerWon}, map={(map != null ? map.name : "null")}");
 
+        // 패배 — 런은 HandleGameEnded 에서 이미 비웠으므로(CurrentMap 도 null) 지도 분기보다 먼저 처리.
+        if (!playerWon)
+        {
+            SceneManager.LoadScene(SceneNames.Title);
+            return;
+        }
+
         if (map == null)
         {
             // 지도 없이 BattleScene 단독 실행 — MapScene 으로 가서 Run 진입 흐름을 다시 탄다.
@@ -76,16 +89,8 @@ public class ResultUI : MonoBehaviour
             return;
         }
 
-        if (playerWon)
-        {
-            RunState.AdvanceNode(map.nodes.Count, NodeType.Battle);
-            SceneManager.LoadScene(SceneNames.Map);
-        }
-        else
-        {
-            // 패배 — Run 초기화 후 타이틀로. 아직 타이틀 씬이 없으면 MapScene 으로 fallback.
-            RunState.ResetRun();
-            SceneManager.LoadScene(string.IsNullOrEmpty(SceneNames.Title) ? SceneNames.Map : SceneNames.Title);
-        }
+        RunState.AdvanceNode(map.nodes.Count, NodeType.Battle);
+        SaveBridge.SaveRunProgress();
+        SceneManager.LoadScene(SceneNames.Map);
     }
 }

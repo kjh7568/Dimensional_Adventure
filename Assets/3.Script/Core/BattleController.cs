@@ -38,17 +38,111 @@ public class BattleController : MonoBehaviour
     public event Action<Side> OnTurnEnded;
     public event Action<Side> OnGameEnded;
 
+    /// <summary>이 값이 설정된 상태로 BattleScene 이 로드되면 Init 이 정상 빌드 대신 복원 경로를 탄다. 1회용 — Init 진입 시 소비된다.</summary>
+    public static BattleSnapshot PendingRestoreSnapshot;
+
     private void Start() => Init();
 
     private void Init()
     {
         State = BattleState.Init;
+        Resolver = new DamageResolver();
+
+        var pending = PendingRestoreSnapshot;
+        PendingRestoreSnapshot = null;
+        if (pending != null && TryRestoreFromSnapshot(pending)) return;
+
         var playerCards = BuildPlayerCards(config.fieldSlotCount);
         var opponentCards = BuildOpponentCards(config.fieldSlotCount);
         Player = new Side(true, playerCards, config.fieldSlotCount);
         Opponent = new Side(false, opponentCards, config.fieldSlotCount);
-        Resolver = new DamageResolver();
         SetState(BattleState.PlayerTurnStart);
+    }
+
+    /// <summary>스냅샷 → 양 진영 Side 재구성 + 턴 상태 복원. 실패 시 false 반환해 일반 Init 으로 폴백.</summary>
+    private bool TryRestoreFromSnapshot(BattleSnapshot snap)
+    {
+        int slots = config.fieldSlotCount;
+        if (snap.playerField == null || snap.opponentField == null) return false;
+
+        var pField = BuildRestoredRow(snap.playerField, slots);
+        var pStand = BuildRestoredRow(snap.playerStandby, slots);
+        var oField = BuildRestoredRow(snap.opponentField, slots);
+        var oStand = BuildRestoredRow(snap.opponentStandby, slots);
+        if (pField == null || pStand == null || oField == null || oStand == null) return false;
+
+        Player = Side.CreateRestored(true, pField, pStand);
+        Opponent = Side.CreateRestored(false, oField, oStand);
+        CurrentEnemyPool = GameAssetsSO.ResolveEnemyPool(snap.enemyPoolId);
+        TurnNumber = Mathf.Max(0, snap.turnNumber);
+
+        // 안전한 체크포인트만 저장되므로 무조건 플레이어 입력 대기 상태로 복원.
+        CurrentSide = Player;
+        State = BattleState.AwaitCardSelect;
+        Debug.Log($"[Battle] Restored from snapshot — turn={TurnNumber}");
+        return true;
+    }
+
+    private static CardInstance[] BuildRestoredRow(System.Collections.Generic.List<CardInstanceSnapshot> snaps, int slots)
+    {
+        var row = new CardInstance[slots];
+        if (snaps == null) return row;
+        for (int i = 0; i < slots && i < snaps.Count; i++)
+        {
+            var s = snaps[i];
+            if (s == null || string.IsNullOrEmpty(s.cardId)) continue;
+            var data = GameAssetsSO.ResolveCard(s.cardId);
+            if (data == null) { Debug.LogError($"[Battle] 전투 복원 실패 — GameAssetsSO.allCards 에 cardId '{s.cardId}' 가 없음. Resources/GameAssets.asset 의 All Cards 배열에 등록 필요. 슬롯이 비워진 채로 전투 시작됨."); continue; }
+            row[i] = CardInstance.CreateRestored(data, s.maxHP, s.currentHP, s.skillBonus, s.skillUsed, s.isTaunting, s.lastStandUsed);
+        }
+        return row;
+    }
+
+    /// <summary>플레이어 입력 대기 중(카드/행동/대상 선택)인가. 이 구간은 아직 행동이 해결되기 전이라 보드가 턴 시작 상태와 같다.</summary>
+    public bool IsAwaitingPlayerInput =>
+        State == BattleState.AwaitCardSelect
+        || State == BattleState.AwaitActionSelect
+        || State == BattleState.AwaitTargetSelect;
+
+    /// <summary>
+    /// 현재 전투 상태를 직렬화. 복원은 항상 플레이어 턴의 AwaitCardSelect 로 재개되므로,
+    /// 플레이어 입력 대기 중일 때만 스냅샷을 만들고 연출·적 턴·종료 시점에는 null 을 반환해 직전 체크포인트를 유지시킨다.
+    /// </summary>
+    public BattleSnapshot CaptureSnapshot()
+    {
+        if (!IsAwaitingPlayerInput) return null;
+        if (Player == null || Opponent == null) return null;
+        var snap = new BattleSnapshot
+        {
+            enemyPoolId = GameAssetsSO.EnemyPoolId(CurrentEnemyPool),
+            turnNumber = TurnNumber,
+            isPlayerTurn = CurrentSide == Player,
+        };
+        FillRow(snap.playerField, Player.field);
+        FillRow(snap.playerStandby, Player.standby);
+        FillRow(snap.opponentField, Opponent.field);
+        FillRow(snap.opponentStandby, Opponent.standby);
+        return snap;
+    }
+
+    private static void FillRow(System.Collections.Generic.List<CardInstanceSnapshot> list, CardInstance[] row)
+    {
+        if (row == null) return;
+        for (int i = 0; i < row.Length; i++)
+        {
+            var c = row[i];
+            if (c == null) { list.Add(new CardInstanceSnapshot()); continue; }
+            list.Add(new CardInstanceSnapshot
+            {
+                cardId = GameAssetsSO.CardId(c.data),
+                maxHP = c.MaxHP,
+                currentHP = c.CurrentHP,
+                skillBonus = c.SkillBonus,
+                skillUsed = c.SkillUsed,
+                isTaunting = c.IsTaunting,
+                lastStandUsed = c.LastStandUsed,
+            });
+        }
     }
 
     /// <summary>
