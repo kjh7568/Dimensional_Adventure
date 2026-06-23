@@ -21,7 +21,7 @@ public static class SaveBridge
     public static SettingsState Settings => SaveSystem.Current.settings;
 
     /// <summary>전투 밖에서 런 진행이 갱신된 시점 — Run 만 저장하고 battle 슬롯은 비운다.
-    /// 지도 도착·노드 진입 직전·이벤트 완료·전투 승리 후 노드 전진 모두 이 한 경로를 쓴다.
+    /// 지도 도착·노드 진입 직전·이벤트 완료·덱 배치 확정·전투 승리 후 노드 전진 모두 이 한 경로를 쓴다.
     /// battle 이 비어 있으므로 이어하기는 항상 지도로 복귀한다.</summary>
     public static void SaveRunProgress()
     {
