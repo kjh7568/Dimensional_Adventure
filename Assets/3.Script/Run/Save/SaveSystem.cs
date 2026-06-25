@@ -39,7 +39,6 @@ public static class SaveSystem
         if (loaded) return;
         loaded = true;
         current = ReadFromDisk() ?? new SaveData();
-        // 버전 불일치 시 안전 처리: 설정만 보존, run/battle 폐기.
         if (current.version != Version)
         {
             Debug.LogWarning($"[SaveSystem] 버전 불일치 ({current.version} → {Version}) — run/battle 폐기, 설정만 유지.");
@@ -106,7 +105,6 @@ public static class SaveSystem
         if (current.battle != null)
         {
             current.battle = null;
-            // activeScene 도 정리해 다음 부팅이 Map 으로 가게.
             current.activeScene = null;
         }
     }

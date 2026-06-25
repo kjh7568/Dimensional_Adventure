@@ -61,12 +61,10 @@ public class CardCodexPanel : MonoBehaviour
         if (gridContainer == null || cardViewPrefab == null) return;
         foreach (var c in CardDex.AllCards)
         {
-            // 셀이 노출됐다 = 해금됐다. MVP 단계(카드 4종 전부 노출) 정책의 일관성. 실루엣 분기를 도입할 때 이 줄은 IsDiscovered 분기 안으로 들어간다.
             CardDex.Register(c);
             var view = Instantiate(cardViewPrefab, gridContainer);
             view.gameObject.SetActive(true);
             view.name = $"CodexCell_{c.cardName}";
-            // 도감 셀은 강화/HP 보너스 무관 — 0 으로 고정해서 baseHP 그대로 표시.
             view.BindPreview(c, 0, 0, interactable: true);
             var captured = c;
             view.OnClicked += _ => OpenDetail(captured);

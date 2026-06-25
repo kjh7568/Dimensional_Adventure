@@ -29,8 +29,6 @@ public class ExpeditionEndPanel : MonoBehaviour
 
     private void Awake()
     {
-        // root 가 자기 자신이면 Awake 가 곧 Show 직후에 호출되는 케이스(=인스펙터에서 비활성 시작 + 외부에서 SetActive(true) 한 직후) 에서
-        // 패널을 다시 꺼버리는 자기충돌이 생긴다. 외부 자식만 root 로 분리한 경우에만 강제 비활성화.
         if (root != null && root != gameObject) root.SetActive(false);
         if (confirmButton != null) confirmButton.onClick.AddListener(OnConfirm);
         else Debug.LogError("[ExpeditionEndPanel] confirmButton 참조 누락 — 버튼이 동작하지 않음.");
@@ -54,12 +52,10 @@ public class ExpeditionEndPanel : MonoBehaviour
 
     private void OnConfirm()
     {
-        // 어느 경로든 Run 은 종료. 세이브의 run/battle 슬롯도 비운다 (hasSeenIntro/hasClearedRun 등 메타는 보존).
         SaveBridge.ClearRun();
 
         if (isFirstClear)
         {
-            // 엔딩 컷씬 → 타이틀. hasClearedRun 은 EndingController.FinishAndGoToTitle 에서 저장.
             SceneLoader.LoadAsync(SceneNames.Ending);
         }
         else

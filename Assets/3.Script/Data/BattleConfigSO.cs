@@ -8,5 +8,5 @@ using UnityEngine;
 public class BattleConfigSO : ScriptableObject
 {
     public int fieldSlotCount = 3;
-    public float opponentActionDelay = 0.8f;  // AI 행동 사이 시각 딜레이
+    public float opponentActionDelay = 0.8f;
 }

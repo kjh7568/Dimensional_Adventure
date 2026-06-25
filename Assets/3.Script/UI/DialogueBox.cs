@@ -51,9 +51,9 @@ public class DialogueBox : MonoBehaviour
     private IList<string> queue;
     private int lineIndex;
     private Coroutine typingRoutine;
-    private bool lineComplete;       // 현재 라인이 모두 노출된 상태인가
-    private bool sequenceActive;     // Play 가 살아있는 상태인가 (중복 입력/이중 종료 방지)
-    private Action onAllEndOnce;     // Play 호출 1회용 콜백
+    private bool lineComplete;
+    private bool sequenceActive;
+    private Action onAllEndOnce;
 
     private void Awake()
     {
@@ -81,7 +81,6 @@ public class DialogueBox : MonoBehaviour
             return;
         }
 
-        // 이전 시퀀스가 남아있으면 콜백 발화 없이 청소.
         if (sequenceActive) HardReset();
 
         queue = lines;
@@ -132,7 +131,6 @@ public class DialogueBox : MonoBehaviour
     {
         if (bodyText == null) yield break;
 
-        // TMP 가 줄바꿈/태그 처리를 마치도록 한 프레임 강제 갱신.
         bodyText.ForceMeshUpdate();
         int totalChars = bodyText.textInfo.characterCount;
 
@@ -155,7 +153,6 @@ public class DialogueBox : MonoBehaviour
                 }
             }
 
-            // 문장 부호 뒤에 살짝 멈춤. 마지막 글자엔 의미 없음.
             float delay = perCharDelay;
             if (i < totalChars && i - 1 < line.Length && IsPausePunctuation(line[i - 1]))
                 delay += punctuationPauseSeconds;

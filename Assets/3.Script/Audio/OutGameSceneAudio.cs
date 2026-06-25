@@ -15,7 +15,6 @@ public class OutGameSceneAudio : MonoBehaviour
     {
         if (AudioManager.Instance != null)
         {
-            // 클립이 있으면 그걸로 크로스페이드, 없으면 진행 중인(전투) BGM 페이드아웃.
             if (outGameBGM != null) AudioManager.Instance.PlayBGM(outGameBGM);
             else AudioManager.Instance.StopBGM();
         }

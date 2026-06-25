@@ -55,19 +55,14 @@ public class HeuristicAIStrategy : IAIStrategy
     {
         int score = 0;
 
-        // 1) 처치 가능
         if (atk.CurrentHP >= def.CurrentHP) score += 10;
 
-        // 2) 힐러 타격 보너스
         if (def.data.type == CardType.Healer) score += 5;
 
-        // 3) 반격에 자신 사망 시 페널티 (원거리 면제)
         if (atkType != CardType.Ranged && def.CurrentHP >= atk.CurrentHP) score -= 4;
 
-        // 4) 원거리 딜러 우선 처치
         if (def.data.type == CardType.Ranged) score += 3;
 
-        // 5) 약체 타겟 우선
         score += (5 - def.CurrentHP);
 
         return score;

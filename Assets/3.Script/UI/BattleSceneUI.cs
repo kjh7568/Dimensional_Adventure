@@ -85,7 +85,7 @@ public class BattleSceneUI : MonoBehaviour
         {
             if (v == null) continue;
             v.OnClicked += HandleEnemyFieldClicked;
-            v.SetInteractable(false); // 평소엔 클릭 안 받음. AwaitTargetSelect 진입 시 valid만 켬.
+            v.SetInteractable(false);
         }
 
         battle.OnTurnStarting += HandleTurnStarting;
@@ -272,7 +272,6 @@ public class BattleSceneUI : MonoBehaviour
             targetIsEnemy = skill.TargetMode != SkillTargetMode.Ally;
         }
 
-        // 양쪽 모두 일단 클리어한 뒤 대상 진영에만 적용.
         ClearHighlightsInternal();
 
         if (targetViews == null) return;
@@ -283,7 +282,6 @@ public class BattleSceneUI : MonoBehaviour
             bool on = valid.Contains(i);
             view.SetHighlight(on);
             if (targetIsEnemy) view.SetInteractable(on);
-            // 아군 타깃: 플레이어 카드 interactable 은 그대로 유지(이미 true) — HandlePlayerCardClicked가 분기.
         }
     }
 
@@ -306,7 +304,6 @@ public class BattleSceneUI : MonoBehaviour
             {
                 if (view == null) continue;
                 view.SetHighlight(false);
-                // 플레이어 interactable 은 건드리지 않음(평소 항상 활성).
             }
         }
     }
@@ -337,7 +334,7 @@ public class BattleSceneUI : MonoBehaviour
     private void HandleCardDied(Side side, int slotIdx, CardInstance dyingCard)
     {
         var view = GetFieldView(side, slotIdx);
-        if (view != null) view.Refresh(); // Bound 아직 dyingCard → DeadOverlay 표시
+        if (view != null) view.Refresh();
         pendingDeaths.Add(new PendingDeath { side = side, fieldSlot = slotIdx });
     }
 
@@ -364,13 +361,11 @@ public class BattleSceneUI : MonoBehaviour
         pendingSpawns.Clear();
         pendingDeaths.Clear();
 
-        // 스폰 병렬 실행
         var running = new List<Coroutine>(spawnsSnap.Count);
         foreach (var s in spawnsSnap)
             running.Add(StartCoroutine(AnimateStandbyToField(s.side, s.fromStandbyIdx, s.fieldSlot, s.newCard)));
         foreach (var c in running) yield return c;
 
-        // 교체되지 않은 사망 슬롯은 명시적으로 비움(데드뷰 잔류 방지)
         foreach (var d in deathsSnap)
         {
             bool replaced = false;
@@ -411,8 +406,6 @@ public class BattleSceneUI : MonoBehaviour
         return arr[slotIdx];
     }
 
-    // ───────── Animation coroutines (DOTween) ─────────
-
     /// <summary>공격자 카드를 살짝 띄운 뒤 대상 카드 위치로 슬램. 데미지 적용은 호출자가 본 코루틴 이후에 수행.</summary>
     public IEnumerator PlayAttackLunge(Side atkSide, int atkSlot, Side defSide, int defSlot)
     {
@@ -429,12 +422,9 @@ public class BattleSceneUI : MonoBehaviour
         }
         if (layer == null) yield break;
 
-        // 캔버스/anim 레이어로 reparent (월드 위치 유지) + 최상단 렌더.
         rt.SetParent(layer, worldPositionStays: true);
         rt.SetAsLastSibling();
 
-        // UI 라 Z축(카메라 방향) 부양이 깨끗하게 안 나옴 → lift 단계 생략.
-        // 자기 슬롯에서 적 슬롯으로 단일 DOMove 로 직선 슬램.
         Vector3 slamPos = ((RectTransform)defView.transform).position;
         yield return rt.DOMove(slamPos, lungeSlamDuration).SetEase(Ease.InQuad).WaitForCompletion();
     }
@@ -483,8 +473,6 @@ public class BattleSceneUI : MonoBehaviour
         var slot = GetFieldSlot(atkSide, atkSlot);
         if (slot == null) yield break;
 
-        // 카운터 데미지로 인한 PlayHitShake 등이 동시에 transform.position 을 만지면 DOMove 가 죽거나 충돌함.
-        // 본 메서드가 복귀의 최종 권위 — 진입 시점에 기존 tween 모두 정리.
         rt.DOKill();
 
         yield return rt.DOMove(slot.position, lungeReturnDuration).SetEase(Ease.InOutQuad).WaitForCompletion();
@@ -525,7 +513,6 @@ public class BattleSceneUI : MonoBehaviour
         var standbySlot = GetStandbySlot(side, standbyIdx);
         var fieldSlotRT = GetFieldSlot(side, fieldSlot);
 
-        // 어느 하나라도 빠지면 인스턴트 폴백
         if (standbyView == null || fieldView == null || standbySlot == null || fieldSlotRT == null)
         {
             if (fieldView != null) fieldView.Bind(side, fieldSlot, newCard, faceUp: true);
@@ -555,19 +542,14 @@ public class BattleSceneUI : MonoBehaviour
         Vector3 endPos = fieldSlotRT.position;
         float total = flipHalfDuration * 2f;
 
-        // 이동(전체 duration) — 백그라운드. 회전 yield 와 동시 진행.
         rt.DOMove(endPos, total).SetEase(Ease.InOutQuad);
 
-        // 회전 0→90 (뒷면이 사라지는 구간)
         yield return rt.DOLocalRotate(new Vector3(0f, 90f, 0f), flipHalfDuration).SetEase(Ease.InQuad).WaitForCompletion();
         standbyView.SetFaceUp(true);
-        // 회전 90→0 (앞면이 나타나는 구간) — 이 사이 이동도 계속 진행
         yield return rt.DOLocalRotate(Vector3.zero, flipHalfDuration).SetEase(Ease.OutQuad).WaitForCompletion();
 
-        // 이동 완료 보장.
         rt.position = endPos;
 
-        // 스왑: field view 가 인계받음, standby view 는 비우고 본래 슬롯으로 복귀.
         fieldView.Bind(side, fieldSlot, newCard, faceUp: true);
 
         standbyView.Bind(side, standbyIdx, null, faceUp: false);
@@ -593,8 +575,6 @@ public class BattleSceneUI : MonoBehaviour
         if (arr == null || slotIdx < 0 || slotIdx >= arr.Length) return null;
         return arr[slotIdx];
     }
-
-    // ───────── Spawn ─────────
 
     private CardView[] SpawnRow(Side side, CardInstance[] cards, RectTransform[] slots, bool faceUp)
     {

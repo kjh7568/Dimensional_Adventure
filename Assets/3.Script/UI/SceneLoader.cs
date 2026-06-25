@@ -62,7 +62,6 @@ public class SceneLoader : MonoBehaviour
         if (instance == null) Bootstrap();
         if (instance == null)
         {
-            // 폴백: 부트스트랩 실패 시 그냥 동기 로드.
             SceneManager.LoadScene(sceneName);
             return;
         }

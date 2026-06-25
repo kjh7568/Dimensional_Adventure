@@ -49,7 +49,7 @@ public class OpeningController : MonoBehaviour
     [SerializeField] private AudioClip openingBGM;
 
     private int cutIndex;
-    private bool finishing; // 종료 처리가 한 번만 실행되도록.
+    private bool finishing;
 
     private void Start()
     {
@@ -79,7 +79,6 @@ public class OpeningController : MonoBehaviour
     {
         var cut = cuts[idx];
 
-        // 새 컷 이미지로 교체. 첫 컷이면 fade 0→1 in, 이후 컷은 out → swap → in.
         if (fadePanel != null && idx > 0)
             yield return Fade(0f, 1f);
 
@@ -95,11 +94,9 @@ public class OpeningController : MonoBehaviour
         if (postFadeHold > 0f)
             yield return new WaitForSecondsRealtime(postFadeHold);
 
-        // 컷 라인 출력. 빈 라인은 거른다.
         var lines = FilterLines(cut.lines);
         if (lines.Count == 0)
         {
-            // 텍스트 없는 컷은 짧게 보여주고 다음으로.
             yield return new WaitForSecondsRealtime(1.2f);
             AdvanceCut();
             yield break;
@@ -113,7 +110,6 @@ public class OpeningController : MonoBehaviour
         }
         else
         {
-            // 다이얼로그 박스가 없으면 그냥 다음 컷으로 (에디터 셋업 누락 방지용 폴백).
             yield return new WaitForSecondsRealtime(1.2f);
             AdvanceCut();
         }

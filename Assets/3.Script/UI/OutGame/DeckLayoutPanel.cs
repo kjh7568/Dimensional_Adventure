@@ -18,8 +18,8 @@ public class DeckLayoutPanel : MonoBehaviour
 
     [Header("Refs")]
     [SerializeField] private GameObject root;
-    [SerializeField] private CardView[] slotViews;   // 길이 6 — 그리드 슬롯 0..5
-    [SerializeField] private CardView[] queueViews;  // 길이 RunState.LayoutSize 권장. [0] 은 DeckView 의 선택 카드 자리로도 재사용.
+    [SerializeField] private CardView[] slotViews;
+    [SerializeField] private CardView[] queueViews;
     [SerializeField] private DeckDetailView detail;
     [SerializeField] private Button confirmButton;
 
@@ -41,7 +41,6 @@ public class DeckLayoutPanel : MonoBehaviour
 
     private void Awake()
     {
-        // 슬롯 뷰의 OnClicked 이벤트에 인덱스 라우팅 람다 연결.
         if (slotViews != null)
         {
             for (int i = 0; i < slotViews.Length; i++)
@@ -64,12 +63,11 @@ public class DeckLayoutPanel : MonoBehaviour
 
         if (mode == Mode.FirstSetup)
         {
-            // 빈 슬롯 + 전체 카드를 큐에 [0..5] 순서로 적재. PlayerDeck 자체가 셔플 픽 결과이므로 추가 셔플 불필요.
             for (int i = 0; i < slotIndices.Length; i++) slotIndices[i] = -1;
             for (int i = 0; i < RunState.PlayerDeck.Count && i < RunState.LayoutSize; i++)
                 queue.Add(i);
         }
-        else // DeckView
+        else
         {
             for (int i = 0; i < slotIndices.Length; i++) slotIndices[i] = RunState.GetLayoutAt(i);
         }
@@ -92,8 +90,6 @@ public class DeckLayoutPanel : MonoBehaviour
 
     private void HandleSlotClickedFirstSetup(int slot)
     {
-        // FirstSetup 은 한 방향 — 빈 슬롯에만 큐 머리 카드를 배치. 이미 채워진 슬롯 재탭은 무반응.
-        // (이전엔 채워진 슬롯 탭 시 큐로 되돌리는 swap 동작이었으나, 같은 슬롯을 두 번 누르면 큐 머리가 그 카드로 바뀌어 다음 배치가 의도와 어긋나는 문제가 있었음.)
         if (slotIndices[slot] >= 0) return;
         if (queue.Count == 0) return;
         slotIndices[slot] = queue[0];
@@ -104,18 +100,15 @@ public class DeckLayoutPanel : MonoBehaviour
 
     private void HandleSlotClickedDeckView(int slot)
     {
-        // 미선택 상태 → 그 슬롯 선택. 빈 슬롯이면 보여줄 카드가 없으니 무시.
         if (selectedSlot == -1)
         {
             if (slotIndices[slot] < 0) return;
             selectedSlot = slot;
         }
-        // 같은 슬롯 재탭 → 해제.
         else if (selectedSlot == slot)
         {
             selectedSlot = -1;
         }
-        // 다른 슬롯 탭 → swap 후 선택 해제.
         else
         {
             int tmp = slotIndices[selectedSlot];
@@ -148,7 +141,6 @@ public class DeckLayoutPanel : MonoBehaviour
     /// <summary>슬롯/큐 카드 binding 과 상세/확정 버튼 상태만 갱신. 위치는 건드리지 않는다.</summary>
     private void BindAll()
     {
-        // 그리드 슬롯.
         for (int i = 0; i < slotViews.Length; i++)
         {
             int deckIdx = (i < slotIndices.Length) ? slotIndices[i] : -1;
@@ -156,9 +148,6 @@ public class DeckLayoutPanel : MonoBehaviour
             slotViews[i].SetHighlight(i == selectedSlot);
         }
 
-        // 큐 — FirstSetup: queue 내용을 순서대로. DeckView: [0] 칸만 선택 카드 미리보기로 사용, 나머지는 비활성.
-        // 빈 큐 슬롯은 GameObject 자체를 꺼서 카드 베이스가 화면에 남지 않도록 한다.
-        // 배열 원소가 null (인스펙터에서 비워둔 경우) 이면 그 슬롯은 통째로 스킵 — 큐 자체를 안 쓸 수도 있음.
         if (queueViews != null)
         {
             for (int i = 0; i < queueViews.Length; i++)
@@ -181,12 +170,11 @@ public class DeckLayoutPanel : MonoBehaviour
                 {
                     queueViews[i].gameObject.SetActive(true);
                     BindSlot(queueViews[i], deckIdx);
-                    queueViews[i].SetInteractable(false); // 큐 카드는 직접 클릭 불가 — 슬롯 탭만 입력.
+                    queueViews[i].SetInteractable(false);
                 }
             }
         }
 
-        // 상세.
         int detailDeckIdx = -1;
         if (currentMode == Mode.FirstSetup)
         {
@@ -204,7 +192,6 @@ public class DeckLayoutPanel : MonoBehaviour
                 detail.Clear();
         }
 
-        // 확정 버튼.
         if (confirmButton != null) confirmButton.interactable = CanConfirm();
     }
 
@@ -296,7 +283,6 @@ public class DeckLayoutPanel : MonoBehaviour
         if (view == null) return;
         if (deckIdx < 0 || deckIdx >= RunState.PlayerDeck.Count)
         {
-            // 빈 슬롯 — BindPreview(null) 로 일러스트/이름 비우고 클릭 자체는 활성(빈 슬롯 탭으로 배치 받기).
             view.BindPreview(null, 0, 0, interactable: true);
             view.SetHighlight(false);
             return;

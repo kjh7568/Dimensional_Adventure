@@ -21,8 +21,6 @@ public class TurnIndicator : MonoBehaviour
         }
 
         battle.OnTurnStarted += HandleTurnStarted;
-        // BattleController.Start가 DefaultExecutionOrder(-100)이라 첫 PlayerTurnStart 이벤트는 본 Start 전에 이미 발화됨.
-        // 따라서 현재 CurrentSide 기반으로 1회 수동 갱신.
         HandleTurnStarted(battle.CurrentSide);
     }
 

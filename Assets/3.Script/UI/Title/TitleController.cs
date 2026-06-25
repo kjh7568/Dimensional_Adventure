@@ -41,7 +41,6 @@ public class TitleController : MonoBehaviour
     {
         if (overwriteModal != null) overwriteModal.SetActive(false);
 
-        // 이전 씬(특히 전투)의 BGM 갈아치우기. 클립 있으면 크로스페이드, 없으면 페이드아웃 정지.
         if (AudioManager.Instance != null)
         {
             if (titleBGM != null) AudioManager.Instance.PlayBGM(titleBGM);
@@ -51,7 +50,6 @@ public class TitleController : MonoBehaviour
         bool resumable = SaveBridge.HasResumableRun();
         if (continueButton != null)
         {
-            // 세이브 없을 때도 버튼은 보이되 클릭 불가능 + 라벨 회색.
             continueButton.interactable = resumable;
             continueButton.onClick.AddListener(OnContinue);
 
@@ -67,7 +65,6 @@ public class TitleController : MonoBehaviour
         if (overwriteConfirm != null) overwriteConfirm.onClick.AddListener(OnOverwriteConfirmed);
         if (overwriteCancel != null) overwriteCancel.onClick.AddListener(OnOverwriteCancelled);
 
-        // 첫 부팅에서 AudioManager 가 아직 없으면 설정값은 SaveSystem 에 이미 로드돼 있고, 다음 씬에서 적용된다.
     }
 
     private void OnContinue()
@@ -101,8 +98,6 @@ public class TitleController : MonoBehaviour
     private void StartNewGame()
     {
         SaveBridge.ClearRun();
-        // 오프닝 컷씬을 한 번도 본 적 없으면 먼저 재생, 그렇지 않으면 곧장 지도.
-        // (ClearRun 은 run/battle 만 비울 뿐 hasSeenIntro 는 보존하므로 두 번째 새 게임부터는 자동 스킵.)
         bool seen = SaveBridge.HasSeenIntro;
         SceneLoader.LoadAsync(seen ? SceneNames.Map : SceneNames.Opening);
     }

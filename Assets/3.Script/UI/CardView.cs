@@ -108,7 +108,6 @@ public class CardView : MonoBehaviour
         gameObject.SetActive(true);
         if (faceUpRoot != null) faceUpRoot.SetActive(IsFaceUp);
         if (faceDownRoot != null) faceDownRoot.SetActive(!IsFaceUp);
-        // button.interactable은 외부(SetInteractable / Bind / SetFaceUp)가 소유. Refresh는 표시만 갱신.
 
         if (!IsFaceUp) return;
 

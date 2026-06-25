@@ -141,7 +141,6 @@ public class EndingController : MonoBehaviour
         finishing = true;
 
         SaveBridge.MarkRunCleared();
-        // Run 자체는 ExpeditionEndPanel 에서 이미 정리됨. 여기선 씬 전환만.
         SceneLoader.LoadAsync(SceneNames.Title);
     }
 

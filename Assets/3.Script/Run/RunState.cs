@@ -238,7 +238,6 @@ public static class RunState
             for (int i = 0; i < perCardSkillBonus.Count && i < snap.perCardSkillBonus.Count; i++)
                 perCardSkillBonus[i] = snap.perCardSkillBonus[i];
 
-        // layout 복원 — 비어있으면 FirstSetup 미완료, 길이 6 이 채워져 있으면 LayoutConfirmed=true.
         ClearLayout();
         if (snap.layout != null && snap.layout.Count == layout.Length)
         {

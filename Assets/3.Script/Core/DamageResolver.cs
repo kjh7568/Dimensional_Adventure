@@ -2,10 +2,10 @@ using System;
 
 public class DamageResolver
 {
-    public event Action<Side, int, int> OnDamageDealt;                  // side, slotIdx, amount
-    public event Action<Side, int, int> OnHealApplied;                  // side, slotIdx, amount
-    public event Action<Side, int, CardInstance> OnCardDied;            // side, slotIdx, dyingCard
-    public event Action<Side, int, CardInstance, int> OnCardSpawned;    // side, slotIdx, newCard, fromStandbyIdx
+    public event Action<Side, int, int> OnDamageDealt;
+    public event Action<Side, int, int> OnHealApplied;
+    public event Action<Side, int, CardInstance> OnCardDied;
+    public event Action<Side, int, CardInstance, int> OnCardSpawned;
 
     /// <summary>
     /// 지정한 진영의 전장 슬롯 카드에 피해를 적용하고, 사망 시 standby 슬롯 중 무작위 1장을 같은 field 슬롯에 자동 배치한다.

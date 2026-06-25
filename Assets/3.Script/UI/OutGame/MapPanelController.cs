@@ -75,7 +75,6 @@ public class MapPanelController : MonoBehaviour
         Rebuild();
         Refresh();
         CheckEnding();
-        // 지도 도착 시점에 한 번 저장 — 전투 끝나고 돌아온 직후나 새 Run 시작 직후 모두 동일하게 동작.
         SaveBridge.SaveRunProgress();
 
         WireDeckPanel();
@@ -86,7 +85,6 @@ public class MapPanelController : MonoBehaviour
     {
         if (deckLayoutPanel != null)
         {
-            // 중복 구독 방지를 위해 한 번 떼고 다시 붙임. (씬 재진입 시 OnEnable 이 두 번 호출돼도 안전.)
             deckLayoutPanel.OnClosed -= HandleDeckPanelClosed;
             deckLayoutPanel.OnClosed += HandleDeckPanelClosed;
         }
@@ -112,7 +110,6 @@ public class MapPanelController : MonoBehaviour
 
     private void HandleDeckPanelClosed()
     {
-        // Refresh 가 SetVisualState 로 각 노드 버튼의 interactable 을 정상 복원.
         Refresh();
     }
 
@@ -311,7 +308,6 @@ public class MapPanelController : MonoBehaviour
         RunState.AdvanceNode(mapData.nodes.Count, type);
         Refresh();
         CheckEnding();
-        // 이벤트 노드 완료(강화/영입) 결과를 디스크에 반영.
         SaveBridge.SaveRunProgress();
     }
 }

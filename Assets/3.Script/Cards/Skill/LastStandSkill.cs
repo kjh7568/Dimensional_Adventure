@@ -13,5 +13,5 @@ public class LastStandSkill : ICardSkill
 
     public IEnumerable<int> GetValidTargets(BattleContext ctx) => Enumerable.Empty<int>();
 
-    public void Execute(BattleContext ctx, int targetIndex) { /* no-op */ }
+    public void Execute(BattleContext ctx, int targetIndex) {  }
 }

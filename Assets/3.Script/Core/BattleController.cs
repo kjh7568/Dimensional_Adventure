@@ -10,7 +10,7 @@ public class BattleController : MonoBehaviour
 {
     [SerializeField] BattleConfigSO config;
     [SerializeField] DifficultyTableSO difficultyTable;
-    [SerializeField] BattleSceneUI sceneUI; // 애니메이션 오케스트레이션용. null 이어도 게임 로직은 동작.
+    [SerializeField] BattleSceneUI sceneUI;
 
     [Header("Fallback (RunState.PlayerDeck 비어있을 때만)")]
     [Tooltip("MapScene 을 거치지 않고 BattleScene 을 단독 실행할 때 사용할 시작 풀. 정상 플로우에선 RunState.PlayerDeck 이 이미 채워져 있음.")]
@@ -86,7 +86,6 @@ public class BattleController : MonoBehaviour
         CurrentEnemyPool = GameAssetsSO.ResolveEnemyPool(snap.enemyPoolId);
         TurnNumber = Mathf.Max(0, snap.turnNumber);
 
-        // 안전한 체크포인트만 저장되므로 무조건 플레이어 입력 대기 상태로 복원.
         CurrentSide = Player;
         State = BattleState.AwaitCardSelect;
         Debug.Log($"[Battle] Restored from snapshot — turn={TurnNumber}");
@@ -178,12 +177,9 @@ public class BattleController : MonoBehaviour
             Debug.LogError("[Battle] 플레이어 카드 소스 없음 (RunState/fallback 둘 다 비어있음).");
         }
 
-        // RunState.PlayerDeck 에서 가져온 카드만 강화 보너스 적용 (fallback 경로는 보너스 없이).
         bool fromRunState = RunState.PlayerDeck != null && RunState.PlayerDeck.Count > 0;
         int globalHpBonus = fromRunState ? RunState.GlobalHpBonus : 0;
 
-        // layout 이 확정되어 있으면 그 순서대로 인스턴스화. layout[i] = 덱 인덱스(또는 -1 빈 슬롯).
-        // 슬롯 0..2 는 field, 3..5 는 standby 로 Side 생성자가 자연스럽게 매핑한다.
         bool useLayout = fromRunState && RunState.LayoutConfirmed;
         var result = new List<CardInstance>(needed);
         if (useLayout)
@@ -390,7 +386,6 @@ public class BattleController : MonoBehaviour
         }
         PendingAttackerIdx = -1;
 
-        // 복귀 후(또는 스킬 실행 후) 누적된 사망/스폰 시각 처리 — 카드 교체 애니메이션.
         if (sceneUI != null) yield return sceneUI.ProcessPendingSpawns();
 
         SetState(BattleState.PlayerTurnEnd);

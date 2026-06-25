@@ -44,7 +44,6 @@ public class SettingsPanel : MonoBehaviour
         if (returnToTitleButton != null)
         {
             returnToTitleButton.onClick.AddListener(OnReturnToTitle);
-            // TitleScene 안에서는 이 버튼이 의미 없으므로 숨김.
             bool isTitle = SceneManager.GetActiveScene().name == SceneNames.Title;
             returnToTitleButton.gameObject.SetActive(!isTitle);
         }
@@ -102,7 +101,6 @@ public class SettingsPanel : MonoBehaviour
     /// </summary>
     private void OnReturnToTitle()
     {
-        // 설정 변경분 먼저 반영.
         SaveBridge.SaveSettings();
         SaveBridge.SaveCurrentProgress();
 

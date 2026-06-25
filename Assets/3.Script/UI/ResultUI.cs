@@ -38,7 +38,6 @@ public class ResultUI : MonoBehaviour
 
     private void Awake()
     {
-        // 패널 자식 활성화 타이밍과 무관하게 리스너를 미리 걸어둔다.
         if (panel != null) panel.SetActive(false);
         if (confirmButton != null) confirmButton.onClick.AddListener(OnConfirm);
         else Debug.LogError("[ResultUI] confirmButton 참조 누락 — 결과 패널 버튼이 동작하지 않음.");
@@ -67,7 +66,6 @@ public class ResultUI : MonoBehaviour
         // 승리 저장은 노드를 전진시킨 뒤여야 하므로 OnConfirm 에서 한다.
         if (!playerWon) SaveBridge.ClearRun();
 
-        // 마지막 노드 승리 = 원정 종료. 일반 결과 패널 대신 0.5초 뒤 ExpeditionEndPanel.
         if (playerWon && IsLastNode() && expeditionEndPanel != null)
         {
             StartCoroutine(ShowExpeditionEndAfterDelay());
@@ -94,7 +92,6 @@ public class ResultUI : MonoBehaviour
     private IEnumerator ShowExpeditionEndAfterDelay()
     {
         yield return new WaitForSeconds(expeditionEndDelay);
-        // hasClearedRun 이 false 면 이번이 첫 클리어. 패널이 자체적으로 EndingScene 으로 분기한다.
         bool firstClear = !SaveBridge.HasClearedRun;
         expeditionEndPanel.Show(RunState.Score, firstClear);
     }
@@ -113,7 +110,6 @@ public class ResultUI : MonoBehaviour
 
         if (map == null)
         {
-            // 지도 없이 BattleScene 단독 실행 — MapScene 으로 가서 Run 진입 흐름을 다시 탄다.
             SceneLoader.LoadAsync(SceneNames.Map);
             return;
         }
